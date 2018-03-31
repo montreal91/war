@@ -1,0 +1,80 @@
+/*
+  :copyright: Alexander Nefedov
+  :license:   BSD, see LICENSE for more details
+*/
+
+svg {
+  border-style: solid;
+  border-color: #000000;
+  border-width: 1px;
+  float: right;
+}
+
+.accessible-area {
+  fill: #d0ffd0;
+  stroke: #47ff1a;
+  stroke-width: 3;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+.map-label {
+  font-size: 11px
+}
+
+.rect-button {
+  fill: #ffffff;
+  fill-opacity: 0;
+  stroke: #d0d0d0;
+  stroke-width: 2;
+}
+
+.rect-button:hover {
+  stroke: #404040;
+}
+
+.rect-button .button-text {
+  text-anchor: middle;
+}
+
+.selection-rect {
+  fill:none;
+  stroke:#ff471a;
+  stroke-width:2;
+}
+
+.war-info {
+  float: left;
+}
+
+/* Factions */
+.red {
+  fill: #660000;
+  stroke: none;
+}
+
+.green {
+  fill: #006600;
+  stroke: none;
+}
+
+.blue {
+  fill: #000066;
+  stroke: none;
+}
+
+.yellow {
+  fill: #FFCC00;
+  stroke: none;
+}
+
+.neutral {
+  fill: #666666;
+  stroke: none;
+}
+
+
+
+
