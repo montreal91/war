@@ -76,9 +76,6 @@ let app = new Vue({
     neutral_army.SubtractUnits(999);
     this.armies.push(neutral_army);
     this.state_stack.push(STATES.MAP);
-    // this.current_army = this.armies[0];
-    this.current_city = this.cities[0];
-    this.state_stack.push(STATES.CITY_DETAILS);
   },
   data: {
     armies: [],
@@ -155,7 +152,6 @@ let app = new Vue({
         this._SelectCity(city);
       }
     },
-    // ClickCity
     ClickFight: function() {
       this.tmp.battle_res = Army.ProcessBattle(this.current_army, this.tmp.army);
       this._PopState();
@@ -262,7 +258,6 @@ let app = new Vue({
       if (city.garrison_out === null) {
         this.current_army.MoveTo(city.GetContactPoint(this.current_army.position));
         city.SetOuterGarrison(this.current_army);
-        // this.current_city = city;
         this._SelectCity(city);
         this._PushState(STATES.CITY_DETAILS);
       } else if (city.garrison_out.faction === this.current_army.faction) {
