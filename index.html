@@ -1,0 +1,324 @@
+<!DOCTYPE HTML>
+
+<!--
+  :copyright: Alexander Nefedov
+  :license:   BSD, see LICENSE for more details
+-->
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WAR</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link href="/styles/main.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark bg-dark">
+  <a href="/war/" class="navbar-brand">W.A.R.</a>
+</nav>
+
+<div id="war-app" class="container">
+  <div class="row">
+    <div class="col-sm">
+      <br>
+    </div>
+  </div>
+<div class="row">
+  <div class="col-sm-3">
+  <p>
+    Money: <span v-text="money"></span><br>
+    Turn: <span v-text="current_turn"></span><br>
+  </p>
+  <p>
+    <button class="btn btn-dark btn-block" v-on:click="NextTurn"
+      v-if="GetCurrentState() === 'map'">Next Turn</button>
+    <button class="btn btn-default btn-block" v-on:click="ToggleLabels">Toggle Labels</button>
+    <button
+      class="btn btn-default btn-block"
+      v-on:click="ClickOpenCityDetails"
+      v-if="current_city"
+    >
+      City Details
+    </button>
+    <button
+      class="btn btn-default btn-block"
+      v-if="current_army"
+      v-on:click="ClickOpenArmyDetails"
+    >
+      Army Details
+    </button>
+  </p>
+  </div>
+
+<div class="col-sm">
+<svg width="800" height="600" v-if="GetCurrentState() === 'map'">
+
+
+<!-- MAP -->
+<g v-bind:class="{invisible: GetCurrentState() != 'map'}">
+  <!-- Area accessible by current army -->
+  <g v-if="current_army">
+    <circle
+      class="accessible-area"
+      v-bind:cx="current_army.position.x"
+      v-bind:cy="current_army.position.y"
+      v-bind:r="current_army.move_points * representation.scale"
+    ></circle>
+  </g>
+  <!-- CLICKABLE MAP OBJECT-->
+  <rect
+    x="0"
+    y="0"
+    width="800"
+    height="600"
+    fill-opacity="0"
+    v-on:click="ClickMap"
+  />
+  <g v-for="city in cities">
+    <g v-bind:transform="city.transform" v-if="city.on_map">
+      <rect
+        x="0"
+        y="0"
+        v-bind:width="representation.city_size"
+        v-bind:height="representation.city_size"
+        v-bind:class="[city.faction]"
+        v-on:click="ClickCity(city)"
+      />
+      <rect 
+        x=-5
+        y=-5
+        v-bind:width="representation.city_size+10"
+        v-bind:height="representation.city_size+10"
+        class="selection-rect"
+        v-bind:class="{invisible: current_city === null || current_city.name !== city.name}"
+      />
+      <text
+        v-text="GetCityLabel(city)" 
+        v-bind:x="representation.city_size / 2"
+        v-bind:y="representation.city_size + 12"
+        v-if="representation.show_labels"
+        text-anchor="middle"
+        class="map-label"></text>
+    </g>
+  </g>
+  <g v-for="army in armies">
+    <g v-bind:transform="army.transform" v-if="army.on_map">
+      <!-- Small description labels -->
+      <g v-if="representation.show_labels">
+      <text 
+        x="0" 
+        v-bind:y="representation.army_size * 3"
+        text-anchor="middle"
+        v-text="army.name"
+        class="map-label"
+      ></text>
+      <text
+        x="0"
+        v-bind:y="representation.army_size * 5"
+        text-anchor="middle"
+        v-text="army.units"
+        class="map-label"
+      ></text>
+      </g>
+      <circle
+        cx="0"
+        cy="0"
+        v-bind:r="representation.army_size"
+        v-bind:class="[army.faction]"
+        v-on:click="ClickArmy(army)"
+      />
+      <!-- Selection circle -->
+      <circle 
+        cx="0"
+        cy="0"
+        class="selection-rect"
+        v-bind:class="{invisible: current_army === null || current_army.name !== army.name}"
+        v-bind:r="representation.army_size+3"
+      />
+    </g>
+  </g>
+</g>
+
+</svg>
+
+
+<!-- Army details window -->
+<div v-if="GetCurrentState() === 'army_details'">
+  <div class="container">
+    <h2>Army Details</h2>
+    <div class="row">
+      <div class="col-sm">
+        <span>Name:</span><br>
+        <span>General:</span><br>
+        <span>Units:</span><br>
+      </div>
+      <div class="col-sm">
+        <span v-text="current_army.name"></span><br>
+        <span v-text="current_army.general"></span><br>
+        <span v-text="current_army.units"></span><br>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm">
+        <button class="btn btn-default" v-on:click="ClickBack">Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Battle details window -->
+<div v-if="GetCurrentState() === 'battle'">
+  <div class="container">
+    <h2>Battle</h2>
+    <div class="row">
+      <div class="col-sm">
+        <h3 v-text="current_army.name"></h3>
+        <span>General: </span><span v-text="current_army.general"></span><br>
+        <span>Units: </span><span v-text="current_army.units"></span><br>
+      </div>
+      <div class="col-sm">
+        <h3 v-text="tmp.army.name"></h3>
+        <span>General: </span><span v-text="tmp.army.general"></span><br>
+        <span>Units: </span><span v-text="tmp.army.units"></span><br>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm">
+        <!-- Back button is for testing purposes -->
+        <button class="btn btn-default" v-on:click="ClickBack">Back</button>
+        <button class="btn btn-default" v-on:click="ClickFight">Fight</button>
+        <button class="btn btn-default">Retreat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Battle result window -->
+<div v-if="GetCurrentState() === 'battle_results'">
+  <div class="container">
+    <h2 v-if="tmp.battle_res.attacker_won">Victory</h2>
+    <h2 v-if="!tmp.battle_res.attacker_won">Loss</h2>
+    <div class="row">
+      <div class="col-sm">
+        <h3 v-text="current_army.name"></h3>
+        <span>General: </span><span v-text="current_army.general"></span><br>
+        <span>Units: </span><span v-text="current_army.units"></span><br>
+        <hr>
+        <span>Loss: </span><span v-text="tmp.battle_res.attacker_loss"></span>
+      </div>
+      <div class="col-sm">
+        <h3 v-text="tmp.army.name"></h3>
+        <span>General: </span><span v-text="tmp.army.general"></span><br>
+        <span>Units: </span><span v-text="tmp.army.units"></span><br>
+        <hr>
+        <span>Loss: </span><span v-text="tmp.battle_res.defender_loss"></span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm">
+        <button class="btn btn-default" v-on:click="ClickBack">Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- City details window -->
+<div v-if="GetCurrentState() === 'city_details'">
+  <div class="container">
+    <h2 v-text="current_city.name"></h2>
+    <div class="row">
+      <button
+        class="btn btn-default"
+        v-if="current_city.garrison_out !== null"
+        v-on:click="ClickSwapGarrisons(current_city)"
+      >
+        &uArr;
+      </button>
+      <button
+        class="btn btn-default"
+        v-if="current_city.garrison_in !== null"
+        v-on:click="ClickSwapGarrisons(current_city)"
+      >
+        &dArr;
+      </button>
+      <button
+        class="btn btn-default"
+        v-on:click="UpgradeCityHall(current_city)"
+      >
+        Upgrade City Hall
+      </button>
+    </div>
+    <div class="row" v-if="current_city.garrison_in !== null">
+      <div class="col-sm">
+        <span v-text="current_city.garrison_in.name"></span>
+      </div>
+    </div>
+    <div class="row" v-if="current_city.garrison_out !== null">
+      <div class="col-sm">
+        <span v-text="current_city.garrison_out.name"></span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm">
+        <span>City Hall level: </span><span v-text="current_city.city_hall"></span><br>
+        <span>Population: </span><span v-text="current_city.population"></span><br>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm">
+        <button class="btn btn-default" v-on:click="ClickBack">Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Troops exchange window -->
+<div v-if="GetCurrentState() === 'troops_exchange'">
+  <div class="container">
+    <h2>Troops exchange window</h2>
+    <div class="row">
+      <div class="col-sm">
+        <span v-text="current_army.name"></span><br>
+        <span>Units:</span>
+        <span v-text="current_army.units"></span><br>
+        <span>General:</span>
+        <span v-text="current_army.general"></span><br>
+        <input type="number" v-model="tmp.left_units" v-bind:max="current_army.units" v-bind:min="0"><br>
+      </div>
+      <div class="col-sm">
+        <button class="btn btn-block" v-on:click="ClickMoveUnitsToRight">&rArr;</button>
+        <button class="btn btn-block" v-on:click="ClickMoveUnitsToLeft">&lArr;</button>
+      </div>
+      <div class="col-sm">
+        <span v-text="tmp.army.name"></span><br>
+        <span>Units:</span>
+        <span v-text="tmp.army.units"></span><br>
+        <span>General:</span>
+        <span v-text="tmp.army.general"></span><br>
+        <input type="number" v-model="tmp.right_units" v-bind:max="tmp.army.units" v-bind:min="0"><br>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm">
+        <button class="btn btn-default" v-on:click="ClickBack">Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+<input v-on:keyup.enter="ClickOpenArmyDetails" type="hidden">
+</div>
+</div>
+
+</div>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="/js/constants.js"></script>
+<script src="/js/map_object.js"></script>
+<script src="/js/army.js"></script>
+<script src="/js/city.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>
