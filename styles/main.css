@@ -49,6 +49,13 @@ svg {
   float: left;
 }
 
+.slot {
+  border-color: #404040;
+  border-radius: 3px;
+  border-style: solid;
+  border-width: 1px;
+}
+
 /* Factions */
 .red {
   fill: #660000;

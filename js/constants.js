@@ -7,11 +7,29 @@
 
 // Gameplay constants
 const ARMY_CONTACT_RADIUS = 12;
+const BUILDING_MODULE_COST = 500;
 const CITY_HALL_PRICE = 1000;
 const CITY_HALL_INCOME_FACTOR = 0.1;
+
+const CITY_NAMES = [
+  "Adelaide",
+  "Lancaster",
+  "Albuquerque",
+  "London",
+  "Arminium",
+  "Rome",
+  "City 17",
+  "Chelyabinsk",
+  "Prague",
+  "Paris",
+  "Yekaterinburg",
+  "St. Louis",
+];
+
 const INCUBATOR_UPGRADE_STEP = 0.005;
 const MAX_MOVE_POINTS = 10;
-const STARTING_MONEY = 2000;
+const STARTING_CITY_POPULATION = 500;
+const STARTING_MONEY = 5000;
 
 class FACTIONS {
   static get NEUTRAL() {
@@ -51,6 +69,10 @@ class STATES {
 
   static get CITY_DETAILS() {
     return "city_details";
+  }
+
+  static get CONSTRUCTION_YARD() {
+    return "construction_yard";
   }
 
   static get MAP() {
