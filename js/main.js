@@ -3,6 +3,37 @@
   :license:   BSD, see LICENSE for more details
 */
 
+class Counter {
+  constructor() {
+    this._counter = 0;
+  }
+
+  get value() {
+    return this._counter;
+  }
+
+  DropValue() {
+    this._counter = 0;
+  }
+
+  IncValue() {
+    this._counter++;
+  }
+};
+
+function CreateTestCities() {
+  res = [];
+  res.push(new City(CITY_NAMES[0], FACTIONS.RED, {x: 400, y: 100}));
+  for (let i=1; i<=5; i++) {
+    let pos = {
+      x: i * 100,
+      y: 500,
+    };
+    res.push(new City(CITY_NAMES[i], FACTIONS.NEUTRAL, pos));
+  }
+  return res;
+}
+
 function GetDistanceBetweenTwoPoints(point1, point2) {
   let dv = SubtractVectors(point1, point2);
   return GetVectorNorm(dv);
@@ -47,21 +78,7 @@ function SubtractVectors(vec_a, vec_b) {
 let app = new Vue({
   el: "#war-app",
   created: function() {
-    let n = 1;
-    for (let i=1; i<5; i++) {
-      for (let j=1; j<5; j++) {
-        let pos = {
-          x: i*80,
-          y: j*80,
-        };
-        let new_city = new City("City " + n, FACTIONS.RED, pos);
-        this.cities.push(new_city);
-        n++;
-      }
-    }
-    
-    let neutral_city = new City("Neutral City", FACTIONS.NEUTRAL, {x: 500, y: 450});
-    this.cities.push(neutral_city);
+    this.cities = CreateTestCities();
     
     for (let i=1; i<6; i++) {
       let army = new Army(
@@ -73,12 +90,16 @@ let app = new Vue({
     }
     
     let neutral_army = new Army("Neutral Army", FACTIONS.NEUTRAL, {x: 450, y: 450});
-    neutral_army.SubtractUnits(999);
     this.armies.push(neutral_army);
-    this.state_stack.push(STATES.MAP);
-    // this.current_army = this.armies[0];
+    
+    this._PushState(STATES.MAP);
     this.current_city = this.cities[0];
-    this.state_stack.push(STATES.CITY_DETAILS);
+    this._PushState(STATES.CITY_DETAILS);
+    this._PushState(STATES.CONSTRUCTION_YARD);
+
+    this._building_id_counter = new Counter();
+
+    // this.ClickBuildCityHall(1);
   },
   data: {
     armies: [],
@@ -103,9 +124,19 @@ let app = new Vue({
     state_stack: [],
     tmp: {
       army: null,
-    }
+    },
+    _building_id_counter: null,
   },
   methods: {
+    CheckAvailableBuildingModules: function(city) {
+      return city.construction_yard.available_building_modules > 0;
+    },
+    ClickAddBuildingModuleToBuilding: function(building_id) {
+      if (this.CheckAvailableBuildingModules(this.current_city)) {
+        this.current_city.construction_yard.AddBuildingModulesToBuilding(building_id, 1);
+        this._ForceInterfaceUpdate()
+      }
+    },
     ClickArmy: function(army) {
       if (this.current_army === null || army === this.current_army) {
         this._SelectArmy(army);
@@ -139,6 +170,24 @@ let app = new Vue({
       this.tmp.city = null;
       this._RemoveDevastatedArmies();
     },
+    ClickBuildBuilding: function(building_type) {
+      this._building_id_counter.IncValue();
+      let building = AbstractBuilding.CreateBuilding(
+        building_type,
+        this._building_id_counter.value
+      );
+      if (this.money >= building.cost) {
+        this.money -= building.cost;
+        this.current_city.construction_yard.AddBuilding(building);
+        this._ForceInterfaceUpdate();
+      }
+    },
+    ClickBuyBuildingModule: function() {
+      if (this.money >= BUILDING_MODULE_COST) {
+        this.money -= BUILDING_MODULE_COST;
+        this.current_city.construction_yard.AddBuildingModules(1);
+      }
+    },
     ClickCity: function(city) {
       if (this.current_army) {
         let contact_point = city.GetContactPoint(this.current_army.position);
@@ -155,7 +204,9 @@ let app = new Vue({
         this._SelectCity(city);
       }
     },
-    // ClickCity
+    ClickConstructionYard: function() {
+      this._PushState(STATES.CONSTRUCTION_YARD);
+    },
     ClickFight: function() {
       this.tmp.battle_res = Army.ProcessBattle(this.current_army, this.tmp.army);
       this._PopState();
@@ -186,6 +237,10 @@ let app = new Vue({
         this._PushState(STATES.CITY_DETAILS);
       }
     },
+    ClickSellBuildingModule: function() {
+      let res = this.current_city.construction_yard.RemoveBuildingModules(1);
+      this.money += res * BUILDING_MODULE_COST / 2;
+    },
     ClickSwapGarrisons: function(city) {
       let tmp = city.garrison_in;
       city.SetInnerGarrison(city.garrison_out);
@@ -198,8 +253,23 @@ let app = new Vue({
         city.garrison_out.ShowOnMap();
       }
     },
+    ClickTakeBuildingModuleFromBuilding: function(building_id) {
+      // console.log(building_id);
+      let res = this.current_city.construction_yard.TakeBuildingModulesFromBuilding(building_id, 1);
+      if (res === 1) {
+        this._ForceInterfaceUpdate();
+      }
+    },
+    // EnoughMoneyToBuild: 
     GetCityLabel: function(city) {
-      return `${city.name} (${city.city_hall})`;
+      if (city.faction === this.player_faction) {
+        return `${city.name} (${city.city_hall})`;
+      } else {
+        return city.name;
+      }
+    },
+    GetCurrentConstructionYardSlots: function() {
+      return this.current_city.construction_yard.slots;
     },
     GetCurrentState: function() {
       return this.state_stack[this.state_stack.length - 1];
@@ -207,8 +277,8 @@ let app = new Vue({
     NextTurn: function() {
       this.current_turn++;
       this._CollectIncome();
-      this._UpdateArmies();
-      this._UpdateCities();
+      this._UpdateAllArmies();
+      this._UpdateAllCities();
       this.current_city = null;
       this.current_army = null;
     },
@@ -228,6 +298,9 @@ let app = new Vue({
         }
       }
       this.money = Math.round(this.money);
+    },
+    _ForceInterfaceUpdate: function() {
+      this.$forceUpdate();
     },
     _GetCityGarrisonPosition: function(city) {
       let margin = {
@@ -262,7 +335,6 @@ let app = new Vue({
       if (city.garrison_out === null) {
         this.current_army.MoveTo(city.GetContactPoint(this.current_army.position));
         city.SetOuterGarrison(this.current_army);
-        // this.current_city = city;
         this._SelectCity(city);
         this._PushState(STATES.CITY_DETAILS);
       } else if (city.garrison_out.faction === this.current_army.faction) {
@@ -323,15 +395,20 @@ let app = new Vue({
         this.current_army = null;
       }
     },
-    _UpdateArmies: function() {
+    _UpdateAllArmies: function() {
       for (let i=0; i<this.armies.length; i++) {
         this.armies[i].RefreshMovePoints();
       }
     },
-    _UpdateCities: function() {
+    _UpdateAllCities: function() {
       for (let i=0; i<this.cities.length; i++) {
-        this.cities[i].MakeNewHumans();
+        this._UpdateOneCity(this.cities[i]);
       }
+    },
+    _UpdateOneCity: function(city) {
+      city.MakeNewHumans();
+      city.construction_yard.Construct();
+      city.EstablishReadyBuildings();
     },
   },
 });

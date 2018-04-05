@@ -7,8 +7,7 @@
 class Incubator {
   constructor() {
     this._coefficient = 0.05;
-    this._population = 100;
-    // this._delta = this._population * this._coefficient;
+    this._population = STARTING_CITY_POPULATION;
   }
 
   get coefficient() {
@@ -23,6 +22,10 @@ class Incubator {
     return this._population;
   }
 
+  AddPopulation(val) {
+    this._population += val;
+  }
+
   Incubate() {
     this._population += this.delta;
     this._population = Math.round(this._population);
@@ -31,20 +34,37 @@ class Incubator {
   Upgrade() {
     this._coefficient += INCUBATOR_UPGRADE_STEP;
   }
+
+  WithdrawPopulation(val) {
+    if (val <= this._population) {
+      this._population -= val;
+      return val;
+    }
+  }
 };
 
 class City extends MapObject {
   constructor(city_name, faction, position) {
     super(city_name, faction, position);
 
+    this._buildings = [];
     this._city_hall = 0;
+    this._construction_yard = new ConstructionYard();
     this._garrison_in = null;
     this._garrison_out = null;
     this._incubator = new Incubator();
   }
 
+  get buildings() {
+    return this._buildings;
+  }
+
   get city_hall() {
     return this._city_hall;
+  }
+
+  get construction_yard() {
+    return this._construction_yard;
   }
 
   get garrison_in() {
@@ -80,7 +100,18 @@ class City extends MapObject {
   }
 
   CollectIncome() {
-    return this._incubator.population * this._city_hall * CITY_HALL_INCOME_FACTOR;
+    let city_halls = 0;
+    for (let building in this._buildings) {
+      if (this._buildings[building].type === BUILDING_PROPERTIES.CITY_HALL1.TYPE) {
+        city_halls++;
+      }
+    }
+    return this._incubator.population * city_halls * CITY_HALL_INCOME_FACTOR;
+  }
+
+  EstablishReadyBuildings() {
+    let ready_buildings = this._construction_yard.WithdrawReadyBuildings();
+    this._buildings.push(...ready_buildings);
   }
 
   GetContactPoint(some_point) {

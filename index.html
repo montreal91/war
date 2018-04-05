@@ -10,13 +10,13 @@
   <meta charset="utf-8">
   <title>WAR</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  <link href="/styles/main.css" rel="stylesheet" type="text/css" />
+  <link href="styles/main.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body>
 
 <nav class="navbar navbar-dark bg-dark">
-  <a href="/war/" class="navbar-brand">W.A.R.</a>
+  <a href="." class="navbar-brand">W.A.R.</a>
 </nav>
 
 <div id="war-app" class="container">
@@ -249,6 +249,11 @@
       >
         Upgrade City Hall
       </button>
+      <button class="btn btn-default"
+        v-on:click="ClickConstructionYard"
+      >
+        Construction Yard
+      </button>
     </div>
     <div class="row" v-if="current_city.garrison_in !== null">
       <div class="col-sm">
@@ -265,12 +270,91 @@
         <span>City Hall level: </span><span v-text="current_city.city_hall"></span><br>
         <span>Population: </span><span v-text="current_city.population"></span><br>
       </div>
+      <div class="col-sm">
+        <p v-for="building in current_city.buildings">
+          <span v-text="building.title"></span>
+        </p>
+      </div>
     </div>
     <div class="row">
       <div class="col-sm">
         <button class="btn btn-default" v-on:click="ClickBack">Back</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Construction yard window -->
+<div v-if="GetCurrentState() === 'construction_yard'">
+  <div class="container">
+    <h2 v-text="current_city.name"></h2>
+    <h4>Construction Yard</h4>
+    <div class="row">
+      <div class="col-sm">
+        <!-- Buttons -->
+        <button class="btn btn-default btn-block"
+          v-on:click="ClickBuyBuildingModule"
+        >
+          Buy Building Module
+        </button>
+        <p>
+          <span>Total Modules:</span>
+          <span v-text="current_city.construction_yard.total_building_modules"></span>
+        </p>
+      </div>
+      <div class="col-sm">
+        <button class="btn btn-default btn-block"
+          v-on:click="ClickSellBuildingModule"
+        >
+          Sell Building Module
+        </button>
+        <p>
+          <span>Available Modules:</span>
+          <span v-text="current_city.construction_yard.available_building_modules"></span>
+        </p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm">
+        <!-- Buildings -->
+        <p v-for="slot in current_city.construction_yard.slots" class="slot">
+          <span v-text="slot.building.title"></span><br>
+          <!-- <progress v-bind:value="slot.building.progress"></progress> -->
+          <small>Complexity: </small><small v-text="slot.building.complexity"></small><br>
+          <small>Progress: </small><small v-text="slot.building.progress"></small><br>
+          <small>Building Modules: </small><small v-text="slot.building_modules"></small>
+          <button class="btn btn-dark btn-sm"
+            v-bind:disabled="!CheckAvailableBuildingModules(current_city)"
+            v-on:click="ClickAddBuildingModuleToBuilding(slot.building.id)"
+          >
+            +
+          </button>
+          <button class="btn btn-sm btn-dark"
+            v-bind:disabled="slot.building_modules === 0"
+            v-on:click="ClickTakeBuildingModuleFromBuilding(slot.building.id)"
+          >
+            &ndash;
+          </button>
+        </p>
+      </div>
+      <div class="col-sm">
+        <button class="btn btn-default btn-block" 
+          v-on:click="ClickBuildBuilding('city_hall1')"
+        >
+          City Hall 1
+        </button>
+        <button class="btn btn-default btn-block" 
+          v-on:click="ClickBuildBuilding('armor_factory')"
+        >
+          Armor Factory
+        </button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm">
+        <button class="btn btn-default" v-on:click="ClickBack">Back</button>
+      </div>
+    </div>   
   </div>
 </div>
 
@@ -315,10 +399,12 @@
 
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
-<script src="/js/constants.js"></script>
-<script src="/js/map_object.js"></script>
-<script src="/js/army.js"></script>
-<script src="/js/city.js"></script>
-<script src="/js/main.js"></script>
+<script src="js/building.js"></script>
+<script src="js/construction_yard.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/map_object.js"></script>
+<script src="js/army.js"></script>
+<script src="js/city.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
