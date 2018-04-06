@@ -121,6 +121,15 @@ class City extends MapObject {
     };
   }
 
+  HasBuilding(building_type) {
+    for (let i=0; i<this._buildings.length; i++) {
+      if (this._buildings[i].type === building_type) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   MakeNewHumans() {
     this._incubator.Incubate();
   }

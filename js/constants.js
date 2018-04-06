@@ -26,10 +26,12 @@ const CITY_NAMES = [
   "St. Louis",
 ];
 
+const RCGF = 9; // Research Complexity Growth Factor 
+
 const INCUBATOR_UPGRADE_STEP = 0.005;
 const MAX_MOVE_POINTS = 10;
 const STARTING_CITY_POPULATION = 500;
-const STARTING_MONEY = 5000;
+const STARTING_MONEY = 50000;
 
 class FACTIONS {
   static get NEUTRAL() {
@@ -81,6 +83,60 @@ class STATES {
 
   static get TROOPS_EXCHANGE() {
     return "troops_exchange";
+  }
+};
+
+class _BuildingPropertiesBundle {
+  constructor(default_title, cost, complexity, type) {
+    this._default_title = default_title;
+    this._cost = cost;
+    this._complexity = complexity;
+    this._type = type;
+  }
+
+  get DEFAULT_TITLE() {
+    return this._default_title;
+  }
+
+  get COST() {
+    return this._cost;
+  }
+
+  get COMPLEXITY() {
+    return this._complexity;
+  }
+
+  get TYPE() {
+    return this._type;
+  }
+}
+
+class BUILDING_PROPERTIES {
+  static get ARMOR_FACTORY() {
+    return new _BuildingPropertiesBundle(
+      "Armor Factory",
+      5000,
+      20,
+      "armor_factory"
+    );
+  }
+
+  static get CITY_HALL1() {
+    return new _BuildingPropertiesBundle(
+      "City Hall",
+      1000,
+      10,
+      "city_hall1"
+    );
+  }
+
+  static get RESEARCH_INSTITUTE() {
+    return new _BuildingPropertiesBundle(
+      "Research Institute",
+      7500,
+      20,
+      "research_institute"
+    );
   }
 };
 

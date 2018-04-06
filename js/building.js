@@ -3,50 +3,7 @@
   :license:   BSD, see LICENSE for more details
 */
 
-class PropertiesBundle {
-  constructor(default_title, cost, complexity, type) {
-    this._default_title = default_title;
-    this._cost = cost;
-    this._complexity = complexity;
-    this._type = type;
-  }
-
-  get DEFAULT_TITLE() {
-    return this._default_title;
-  }
-
-  get COST() {
-    return this._cost;
-  }
-
-  get COMPLEXITY() {
-    return this._complexity;
-  }
-
-  get TYPE() {
-    return this._type;
-  }
-}
-
-class BUILDING_PROPERTIES {
-  static get ARMOR_FACTORY() {
-    return new PropertiesBundle("Armor Factory", 5000, 20, "armor_factory");
-  }
-
-  static get CITY_HALL1() {
-    return new PropertiesBundle("City Hall", 1000, 10, "city_hall1");
-  }
-};
-
 class AbstractBuilding {
-  static CreateBuilding(building_type, id) {
-    if (building_type === BUILDING_PROPERTIES.CITY_HALL1.TYPE) {
-      return new CityHall1(id, BUILDING_PROPERTIES.CITY_HALL1.DEFAULT_TITLE);
-    } else if (building_type === BUILDING_PROPERTIES.ARMOR_FACTORY.TYPE) {
-      return new ArmorFactory(id, BUILDING_PROPERTIES.ARMOR_FACTORY.DEFAULT_TITLE);
-    }
-  }
-
   constructor(id, complexity, cost, title, type) {
     this._id = id;
 

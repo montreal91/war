@@ -21,6 +21,18 @@ class Counter {
   }
 };
 
+function CreateBuilding(building_type, id) {
+  if (building_type === BUILDING_PROPERTIES.CITY_HALL1.TYPE) {
+    return new CityHall1(id, BUILDING_PROPERTIES.CITY_HALL1.DEFAULT_TITLE);
+  }
+  else if (building_type === BUILDING_PROPERTIES.ARMOR_FACTORY.TYPE) {
+    return new ArmorFactory(id, BUILDING_PROPERTIES.ARMOR_FACTORY.DEFAULT_TITLE);
+  }
+  else if (building_type === BUILDING_PROPERTIES.RESEARCH_INSTITUTE.TYPE) {
+    return new ResearchInstitute(id, BUILDING_PROPERTIES.RESEARCH_INSTITUTE.DEFAULT_TITLE);
+  }
+}
+
 function CreateTestCities() {
   res = [];
   res.push(new City(CITY_NAMES[0], FACTIONS.RED, {x: 400, y: 100}));
@@ -172,7 +184,7 @@ let app = new Vue({
     },
     ClickBuildBuilding: function(building_type) {
       this._building_id_counter.IncValue();
-      let building = AbstractBuilding.CreateBuilding(
+      let building = CreateBuilding(
         building_type,
         this._building_id_counter.value
       );
@@ -254,16 +266,14 @@ let app = new Vue({
       }
     },
     ClickTakeBuildingModuleFromBuilding: function(building_id) {
-      // console.log(building_id);
       let res = this.current_city.construction_yard.TakeBuildingModulesFromBuilding(building_id, 1);
       if (res === 1) {
         this._ForceInterfaceUpdate();
       }
     },
-    // EnoughMoneyToBuild: 
     GetCityLabel: function(city) {
       if (city.faction === this.player_faction) {
-        return `${city.name} (${city.city_hall})`;
+        return `${city.name} (${city.population})`;
       } else {
         return city.name;
       }
@@ -284,12 +294,6 @@ let app = new Vue({
     },
     ToggleLabels: function() {
       this.representation.show_labels = !this.representation.show_labels;
-    },
-    UpgradeCityHall: function(city) {
-      if (this.money >= CITY_HALL_PRICE) {
-        city.UpgradeCityHall();
-        this.money-=CITY_HALL_PRICE;
-      }
     },
     _CollectIncome: function() {
       for (let i=0; i<this.cities.length; i++) {
