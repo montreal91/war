@@ -87,6 +87,16 @@ function SubtractVectors(vec_a, vec_b) {
   };
 }
 
+Vue.component("research-project", {
+  props: ["project", "institute", "scientists"],
+  template: "#template-research-project",
+  computed: {
+    complexity: function() {
+      return this.institute.GetNextLevelComplexity(this.project);
+    },
+  },
+});
+
 let app = new Vue({
   el: "#war-app",
   created: function() {
@@ -107,11 +117,16 @@ let app = new Vue({
     this._PushState(STATES.MAP);
     this.current_city = this.cities[0];
     this._PushState(STATES.CITY_DETAILS);
-    this._PushState(STATES.CONSTRUCTION_YARD);
+
+    let institute = CreateBuilding(
+      BUILDING_PROPERTIES.RESEARCH_INSTITUTE.TYPE,
+      0
+    );
+    institute.Build(institute.complexity);
+    this.current_city._buildings[BUILDING_PROPERTIES.RESEARCH_INSTITUTE.TYPE] = institute;
+    this._PushState(STATES.RESEARCH_INSTITUTE);
 
     this._building_id_counter = new Counter();
-
-    // this.ClickBuildCityHall(1);
   },
   data: {
     armies: [],
@@ -136,6 +151,10 @@ let app = new Vue({
     state_stack: [],
     tmp: {
       army: null,
+      scientists: {
+        to_hire: 0,
+        to_fire: 0,
+      },
     },
     _building_id_counter: null,
   },
@@ -224,6 +243,30 @@ let app = new Vue({
       this._PopState();
       this._PushState(STATES.BATTLE_RESULTS);
     },
+    ClickFirePersonnel: function(personnel_type) {
+      if (this.tmp.scientists.to_fire > this.current_city.research_institute.total_scientists) {
+        return false;
+      }
+      if (personnel_type === PERSONNEL_TYPES.SCIENTISTS) {
+        let scientists = Number(this.tmp.scientists.to_fire);
+        this.current_city.research_institute.WithdrawScientistsFromInstitute(scientists);
+        this.current_city.AddPopulation(scientists);
+        this.money -= this.GetFireCost(PERSONNEL_TYPES.SCIENTISTS);
+        this.tmp.scientists.to_fire = 0;
+      }
+    },
+    ClickHirePersonnel: function(personnel_type) {
+      if (this.tmp.scientists.to_hire > this.current_city.population) {
+        return false;
+      }
+      if (personnel_type === PERSONNEL_TYPES.SCIENTISTS) {
+        let scientists = Number(this.tmp.scientists.to_hire);
+        this.current_city.WithdrawPopulation(scientists);
+        this.current_city.research_institute.AddScientistsToInstitute(scientists);
+        this.money -= this.GetHireCost(PERSONNEL_TYPES.SCIENTISTS);
+        this.tmp.scientists.to_hire = 0;
+      }
+    },
     ClickMap: function(event) {
       if (this.current_army) {
         this._MoveSelectedArmy(event);
@@ -248,6 +291,13 @@ let app = new Vue({
       if (this.current_city !== null) {
         this._PushState(STATES.CITY_DETAILS);
       }
+    },
+    ClickOpenManageScientistsWindow: function() {
+      this.tmp.personnel = PERSONNEL_TYPES.SCIENTISTS;
+      this._PushState(STATES.PERSONNEL_MANAGEMENT);
+    },
+    ClickResearchInstitute: function() {
+      this._PushState(STATES.RESEARCH_INSTITUTE);
     },
     ClickSellBuildingModule: function() {
       let res = this.current_city.construction_yard.RemoveBuildingModules(1);
@@ -284,13 +334,49 @@ let app = new Vue({
     GetCurrentState: function() {
       return this.state_stack[this.state_stack.length - 1];
     },
+    GetFireCost: function(personnel_type) {
+      if (personnel_type === PERSONNEL_TYPES.SCIENTISTS) {
+        let scientists = Number(this.tmp.scientists.to_fire);
+        return scientists * SCIENTIST_HIRE_COST / 2;
+      }
+      else if (personnel_type === PERSONNEL_TYPES.SOLDIERS) {
+        return 0;
+      }
+      else {
+        return -1;
+      }
+    },
+    GetHireCost: function(personnel_type) {
+      if (personnel_type === PERSONNEL_TYPES.SCIENTISTS) {
+        let num = Number(this.tmp.scientists.to_hire);
+        return num * SCIENTIST_HIRE_COST;
+      }
+      else if (personnel_type === PERSONNEL_TYPES.SOLDIERS) {
+        return 0;
+      }
+      else {
+        return -1;
+      }
+    },
     NextTurn: function() {
       this.current_turn++;
       this._CollectIncome();
+      this._WasteMoney();
       this._UpdateAllArmies();
       this._UpdateAllCities();
       this.current_city = null;
       this.current_army = null;
+    },
+    OnAddMaxScientists: function(project) {
+      // let need_scientists = project.GetNextLevelComplexity(this.current_city.science_level);
+      let need_scientists = this.current_city.research_institute.GetNextLevelComplexity(project);
+      let available_scientists = this.current_city.research_institute.available_scientists;
+      if (available_scientists >= need_scientists) {
+        this.current_city.research_institute.AddScientistsToResearchProject(project, need_scientists);
+      } else {
+        this.current_city.research_institute.AddScientistsToResearchProject(project, available_scientists);
+      }
+      this._ForceInterfaceUpdate();
     },
     ToggleLabels: function() {
       this.representation.show_labels = !this.representation.show_labels;
@@ -410,13 +496,17 @@ let app = new Vue({
       }
     },
     _UpdateOneCity: function(city) {
+      city.DoResearch();
       city.MakeNewHumans();
       city.construction_yard.Construct();
       city.EstablishReadyBuildings();
     },
+    _WasteMoney: function() {
+      for (let i=0; i<this.cities.length; i++) {
+        if (this.cities[i].faction === this.player_faction) {
+          this.money -= this.cities[i].research_cost;
+        }
+      }
+    },
   },
 });
-
-
-
-

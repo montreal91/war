@@ -20,6 +20,7 @@
 </nav>
 
 <div id="war-app" class="container">
+  <!-- <input v-on:keyup.enter="OnEnter"> -->
   <div class="row">
     <div class="col-sm">
       <br>
@@ -55,9 +56,24 @@
         Construction Yard
       </button>
       <button class="btn btn-default btn-block"
-        v-if="current_city.HasBuilding('research_institute')">
+        v-if="current_city.HasBuilding('research_institute')"
+        v-on:click="ClickResearchInstitute">
         Research Institute
       </button>
+    </p>
+    <p v-if="GetCurrentState() === 'construction_yard'">
+      <button class="btn btn-default btn-block"
+        v-on:click="ClickBuyBuildingModule">
+        Buy Building Module
+      </button>
+      <button class="btn btn-default btn-block"
+        v-on:click="ClickSellBuildingModule">
+        Sell Building Module
+      </button>
+    </p>
+    <p v-if="GetCurrentState() === 'research_institute'">
+      <button class="btn btn-default btn-block"
+        v-on:click="ClickOpenManageScientistsWindow">Manage Scientists</button>
     </p>
     <p v-if="GetCurrentState() !== 'map'">
       <button class="btn btn-default btn-block" v-on:click="ClickBack">Back</button>
@@ -158,226 +174,338 @@
 
 <!-- Army details window -->
 <div v-if="GetCurrentState() === 'army_details'">
-  <div class="container">
-    <h2>Army Details</h2>
-    <div class="row">
-      <div class="col-sm">
-        <span>Name:</span><br>
-        <span>General:</span><br>
-        <span>Units:</span><br>
-      </div>
-      <div class="col-sm">
-        <span v-text="current_army.name"></span><br>
-        <span v-text="current_army.general"></span><br>
-        <span v-text="current_army.units"></span><br>
-      </div>
+<div class="container">
+  <h2>Army Details</h2>
+  <div class="row">
+    <div class="col-sm">
+      <span>Name:</span><br>
+      <span>General:</span><br>
+      <span>Units:</span><br>
+    </div>
+    <div class="col-sm">
+      <span v-text="current_army.name"></span><br>
+      <span v-text="current_army.general"></span><br>
+      <span v-text="current_army.units"></span><br>
     </div>
   </div>
+</div>
 </div>
 
 <!-- Battle details window -->
 <div v-if="GetCurrentState() === 'battle'">
-  <div class="container">
-    <h2>Battle</h2>
-    <div class="row">
-      <div class="col-sm">
-        <h3 v-text="current_army.name"></h3>
-        <span>General: </span><span v-text="current_army.general"></span><br>
-        <span>Units: </span><span v-text="current_army.units"></span><br>
-      </div>
-      <div class="col-sm">
-        <h3 v-text="tmp.army.name"></h3>
-        <span>General: </span><span v-text="tmp.army.general"></span><br>
-        <span>Units: </span><span v-text="tmp.army.units"></span><br>
-      </div>
+<div class="container">
+  <h2>Battle</h2>
+  <div class="row">
+    <div class="col-sm">
+      <h3 v-text="current_army.name"></h3>
+      <span>General: </span><span v-text="current_army.general"></span><br>
+      <span>Units: </span><span v-text="current_army.units"></span><br>
     </div>
-    <div class="row">
-      <div class="col-sm">
-        <!-- Back button is for testing purposes -->
-        <button class="btn btn-default" v-on:click="ClickBack">Back</button>
-        <button class="btn btn-default" v-on:click="ClickFight">Fight</button>
-        <button class="btn btn-default">Retreat</button>
-      </div>
+    <div class="col-sm">
+      <h3 v-text="tmp.army.name"></h3>
+      <span>General: </span><span v-text="tmp.army.general"></span><br>
+      <span>Units: </span><span v-text="tmp.army.units"></span><br>
     </div>
   </div>
+  <div class="row">
+    <div class="col-sm">
+      <!-- Back button is for testing purposes -->
+      <button class="btn btn-default" v-on:click="ClickBack">Back</button>
+      <button class="btn btn-default" v-on:click="ClickFight">Fight</button>
+      <button class="btn btn-default">Retreat</button>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- Battle result window -->
 <div v-if="GetCurrentState() === 'battle_results'">
-  <div class="container">
-    <h2 v-if="tmp.battle_res.attacker_won">Victory</h2>
-    <h2 v-if="!tmp.battle_res.attacker_won">Loss</h2>
-    <div class="row">
-      <div class="col-sm">
-        <h3 v-text="current_army.name"></h3>
-        <span>General: </span><span v-text="current_army.general"></span><br>
-        <span>Units: </span><span v-text="current_army.units"></span><br>
-        <hr>
-        <span>Loss: </span><span v-text="tmp.battle_res.attacker_loss"></span>
-      </div>
-      <div class="col-sm">
-        <h3 v-text="tmp.army.name"></h3>
-        <span>General: </span><span v-text="tmp.army.general"></span><br>
-        <span>Units: </span><span v-text="tmp.army.units"></span><br>
-        <hr>
-        <span>Loss: </span><span v-text="tmp.battle_res.defender_loss"></span>
-      </div>
+<div class="container">
+  <h2 v-if="tmp.battle_res.attacker_won">Victory</h2>
+  <h2 v-if="!tmp.battle_res.attacker_won">Loss</h2>
+  <div class="row">
+    <div class="col-sm">
+      <h3 v-text="current_army.name"></h3>
+      <span>General: </span><span v-text="current_army.general"></span><br>
+      <span>Units: </span><span v-text="current_army.units"></span><br>
+      <hr>
+      <span>Loss: </span><span v-text="tmp.battle_res.attacker_loss"></span>
+    </div>
+    <div class="col-sm">
+      <h3 v-text="tmp.army.name"></h3>
+      <span>General: </span><span v-text="tmp.army.general"></span><br>
+      <span>Units: </span><span v-text="tmp.army.units"></span><br>
+      <hr>
+      <span>Loss: </span><span v-text="tmp.battle_res.defender_loss"></span>
     </div>
   </div>
+</div>
 </div>
 
 <!-- City details window -->
 <div v-if="GetCurrentState() === 'city_details'">
-  <div class="container">
-    <h2 v-text="current_city.name"></h2>
-    <div class="row">
-      <button
-        class="btn btn-default"
-        v-if="current_city.garrison_out !== null"
-        v-on:click="ClickSwapGarrisons(current_city)"
-      >
-        &uArr;
-      </button>
-      <button
-        class="btn btn-default"
-        v-if="current_city.garrison_in !== null"
-        v-on:click="ClickSwapGarrisons(current_city)"
-      >
-        &dArr;
-      </button>
-    </div>
-    <div class="row" v-if="current_city.garrison_in !== null">
-      <div class="col-sm">
-        <span v-text="current_city.garrison_in.name"></span>
-      </div>
-    </div>
-    <div class="row" v-if="current_city.garrison_out !== null">
-      <div class="col-sm">
-        <span v-text="current_city.garrison_out.name"></span>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-sm">
-        <span>City Hall level: </span><span v-text="current_city.city_hall"></span><br>
-        <span>Population: </span><span v-text="current_city.population"></span><br>
-      </div>
-      <div class="col-sm">
-        <p v-for="building in current_city.buildings">
-          <span v-text="building.title"></span>
-        </p>
-      </div>
+<div class="container">
+  <h2 v-text="current_city.name"></h2>
+  <div class="row">
+    <button
+      class="btn btn-default"
+      v-if="current_city.garrison_out !== null"
+      v-on:click="ClickSwapGarrisons(current_city)"
+    >
+      &uArr;
+    </button>
+    <button
+      class="btn btn-default"
+      v-if="current_city.garrison_in !== null"
+      v-on:click="ClickSwapGarrisons(current_city)"
+    >
+      &dArr;
+    </button>
+  </div>
+  <div class="row" v-if="current_city.garrison_in !== null">
+    <div class="col-sm">
+      <span v-text="current_city.garrison_in.name"></span>
     </div>
   </div>
+  <div class="row" v-if="current_city.garrison_out !== null">
+    <div class="col-sm">
+      <span v-text="current_city.garrison_out.name"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      <span>City Hall level: </span><span v-text="current_city.city_hall"></span><br>
+      <span>Population: </span><span v-text="current_city.population"></span><br>
+    </div>
+    <div class="col-sm">
+      <p v-for="building in current_city.buildings">
+        <span v-text="building.title"></span>
+      </p>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- Construction yard window -->
 <div v-if="GetCurrentState() === 'construction_yard'">
-  <div class="container">
-    <h2 v-text="current_city.name"></h2>
-    <h4>Construction Yard</h4>
-    <div class="row">
-      <div class="col-sm">
-        <!-- Buttons -->
-        <button class="btn btn-default btn-block"
-          v-on:click="ClickBuyBuildingModule"
-        >
-          Buy Building Module
-        </button>
-        <p>
-          <span>Total Modules:</span>
-          <span v-text="current_city.construction_yard.total_building_modules"></span>
-        </p>
-      </div>
-      <div class="col-sm">
-        <button class="btn btn-default btn-block"
-          v-on:click="ClickSellBuildingModule"
-        >
-          Sell Building Module
-        </button>
-        <p>
-          <span>Available Modules:</span>
-          <span v-text="current_city.construction_yard.available_building_modules"></span>
-        </p>
-      </div>
+<div class="container">
+  <h2 v-text="current_city.name"></h2>
+  <h4>Construction Yard</h4>
+  <div class="row">
+    <div class="col-sm">
+      <p>
+        <span>Total Modules:</span>
+        <span v-text="current_city.construction_yard.total_building_modules"></span>
+      </p>
     </div>
-    <div class="row">
-      <div class="col-sm">
-        <!-- Buildings -->
-        <p v-for="slot in current_city.construction_yard.slots" class="slot">
-          <span v-text="slot.building.title"></span><br>
-          <!-- <progress v-bind:value="slot.building.progress"></progress> -->
-          <small>Complexity: </small><small v-text="slot.building.complexity"></small><br>
-          <small>Progress: </small><small v-text="slot.building.progress"></small><br>
-          <small>Building Modules: </small><small v-text="slot.building_modules"></small>
-          <button class="btn btn-dark btn-sm"
-            v-bind:disabled="!CheckAvailableBuildingModules(current_city)"
-            v-on:click="ClickAddBuildingModuleToBuilding(slot.building.id)"
-          >
-            +
-          </button>
-          <button class="btn btn-sm btn-dark"
-            v-bind:disabled="slot.building_modules === 0"
-            v-on:click="ClickTakeBuildingModuleFromBuilding(slot.building.id)"
-          >
-            &ndash;
-          </button>
-        </p>
+    <div class="col-sm">
+      <p>
+        <span>Available Modules:</span>
+        <span v-text="current_city.construction_yard.available_building_modules"></span>
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      <!-- Buildings -->
+      <p v-for="slot in current_city.construction_yard.slots" class="slot">
+        <span v-text="slot.building.title"></span><br>
+        <!-- <progress v-bind:value="slot.building.progress"></progress> -->
+        <small>Complexity: </small><small v-text="slot.building.complexity"></small><br>
+        <small>Progress: </small><small v-text="slot.building.progress"></small><br>
+        <small>Building Modules: </small><small v-text="slot.building_modules"></small>
+        <button class="btn btn-dark btn-sm"
+          v-bind:disabled="!CheckAvailableBuildingModules(current_city)"
+          v-on:click="ClickAddBuildingModuleToBuilding(slot.building.id)"
+        >
+          +
+        </button>
+        <button class="btn btn-sm btn-dark"
+          v-bind:disabled="slot.building_modules === 0"
+          v-on:click="ClickTakeBuildingModuleFromBuilding(slot.building.id)"
+        >
+          &ndash;
+        </button>
+      </p>
+    </div>
+    <div class="col-sm">
+      <button class="btn btn-default btn-block"
+        v-on:click="ClickBuildBuilding('city_hall1')"
+      >
+        City Hall 1
+      </button>
+      <button class="btn btn-default btn-block"
+        v-on:click="ClickBuildBuilding('research_institute')"
+      >
+        Research Institute
+      </button>
+      <button class="btn btn-default btn-block"
+        v-on:click="ClickBuildBuilding('armor_factory')"
+      >
+        Armor Factory
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Personnel management window -->
+<div v-if="GetCurrentState() === 'personnel_management'">
+<div class="container">
+  <h2>Personnel management</h2>
+  <h4 v-text="tmp.personnel"></h4>
+  <div class="row">
+    <div class="col-sm">
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Hire</span>
+        </div>
+        <input
+          type="number"
+          class="form-control"
+          aria-label="Amount"
+          min="0"
+          v-bind:max="current_city.population"
+          v-model="tmp.scientists.to_hire"
+        >
+        <div class="input-group-append">
+          <span class="input-group-text" v-text="GetHireCost(tmp.personnel)"></span>
+          <span class="input-group-text">$</span>
+          <button class="btn btn-outline-secondary"
+            v-on:click="ClickHirePersonnel(tmp.personnel)">OK</button>
+        </div>
       </div>
-      <div class="col-sm">
-        <button class="btn btn-default btn-block" 
-          v-on:click="ClickBuildBuilding('city_hall1')"
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Fire</span>
+        </div>
+        <input
+          type="number"
+          class="form-control"
+          aria-label="Amount"
+          min="0"
+          v-bind:max="current_city.research_institute.total_scientists"
+          v-model="tmp.scientists.to_fire"
         >
-          City Hall 1
-        </button>
-        <button class="btn btn-default btn-block"
-          v-on:click="ClickBuildBuilding('research_institute')"
-        >
-          Research Institute
-        </button>
-        <button class="btn btn-default btn-block" 
-          v-on:click="ClickBuildBuilding('armor_factory')"
-        >
-          Armor Factory
-        </button>
+        <div class="input-group-append">
+          <span class="input-group-text" v-text="GetFireCost(tmp.personnel)"></span>
+          <span class="input-group-text">$</span>
+          <button class="btn btn-outline-secondary"
+            v-on:click="ClickFirePersonnel(tmp.personnel)">OK</button>
+        </div>
       </div>
     </div>
   </div>
+</div>
+</div>
+
+<!-- Research Institute window -->
+<div v-if="GetCurrentState() === 'research_institute'">
+<div class="container">
+  <h2>Research Institute</h2>
+  <div class="row">
+    <div class="col-sm">
+      <p>
+        <span>Scientists:</span>
+        <span v-text="current_city.research_institute.working_scientists"></span>
+        <span>/</span>
+        <span v-text="current_city.research_institute.total_scientists"></span>
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      <research-project
+        v-bind:project="current_city.research_institute.economy"
+        v-bind:institute="current_city.research_institute"
+        v-bind:scientists="current_city.research_institute.economy.working_scientists"
+        v-on:add-max-scientists="OnAddMaxScientists">
+      </research-project>
+    </div>
+    <div class="col-sm">
+      <research-project
+        v-bind:project="current_city.research_institute.science"
+        v-bind:institute="current_city.research_institute"
+        v-bind:scientists="current_city.research_institute.science.working_scientists"
+        v-on:add-max-scientists="OnAddMaxScientists">
+      </research-project>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- Troops exchange window -->
 <div v-if="GetCurrentState() === 'troops_exchange'">
-  <div class="container">
-    <h2>Troops exchange window</h2>
-    <div class="row">
-      <div class="col-sm">
-        <span v-text="current_army.name"></span><br>
-        <span>Units:</span>
-        <span v-text="current_army.units"></span><br>
-        <span>General:</span>
-        <span v-text="current_army.general"></span><br>
-        <input type="number" v-model="tmp.left_units" v-bind:max="current_army.units" v-bind:min="0"><br>
-      </div>
-      <div class="col-sm">
-        <button class="btn btn-block" v-on:click="ClickMoveUnitsToRight">&rArr;</button>
-        <button class="btn btn-block" v-on:click="ClickMoveUnitsToLeft">&lArr;</button>
-      </div>
-      <div class="col-sm">
-        <span v-text="tmp.army.name"></span><br>
-        <span>Units:</span>
-        <span v-text="tmp.army.units"></span><br>
-        <span>General:</span>
-        <span v-text="tmp.army.general"></span><br>
-        <input type="number" v-model="tmp.right_units" v-bind:max="tmp.army.units" v-bind:min="0"><br>
-      </div>
+<div class="container">
+  <h2>Troops exchange window</h2>
+  <div class="row">
+    <div class="col-sm">
+      <span v-text="current_army.name"></span><br>
+      <span>Units:</span>
+      <span v-text="current_army.units"></span><br>
+      <span>General:</span>
+      <span v-text="current_army.general"></span><br>
+      <input type="number" v-model="tmp.left_units" v-bind:max="current_army.units" v-bind:min="0"><br>
+    </div>
+    <div class="col-sm">
+      <button class="btn btn-block" v-on:click="ClickMoveUnitsToRight">&rArr;</button>
+      <button class="btn btn-block" v-on:click="ClickMoveUnitsToLeft">&lArr;</button>
+    </div>
+    <div class="col-sm">
+      <span v-text="tmp.army.name"></span><br>
+      <span>Units:</span>
+      <span v-text="tmp.army.units"></span><br>
+      <span>General:</span>
+      <span v-text="tmp.army.general"></span><br>
+      <input type="number" v-model="tmp.right_units" v-bind:max="tmp.army.units" v-bind:min="0"><br>
     </div>
   </div>
 </div>
 </div>
 </div>
+</div>
 
 </div>
 
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<!-- Templates for components -->
+<script type="text/x-template" id="template-research-project">
+<div class="slot">
+  <div class="container">
+  <div class="row">
+    <div class="col-sm">
+      <span class="h5" v-text="project.title"></span><br>
+
+      <span>Current Level: </span><span v-text="project.level"></span><br>
+      <span>Complexity: </span>
+      <span v-text="complexity"></span><br>
+
+      <span>Progress: </span>
+      <span v-text="project.progress"></span>
+      <br>
+
+      <span>Working Scientists:</span>
+      <span v-text="scientists"></span>
+      <br>
+    </div>
+
+    <div class="col-sm">
+      <div class="btn-group-vertical btn-group-sm float-right pt-1 pb-1">
+        <button class="btn btn-secondary"
+          v-on:click="$emit('add-max-scientists', project)">
+          Max
+        </button>
+        <button class="btn btn-secondary">+</button>
+        <button class="btn btn-secondary">-</button>
+        <button class="btn btn-secondary">Min</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+</script>
+
+<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
 <script src="js/constants.js"></script>
 <script src="js/building.js"></script>

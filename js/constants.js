@@ -30,61 +30,10 @@ const RCGF = 9; // Research Complexity Growth Factor
 
 const INCUBATOR_UPGRADE_STEP = 0.005;
 const MAX_MOVE_POINTS = 10;
-const STARTING_CITY_POPULATION = 500;
+const SCIENTIST_HIRE_COST = 100;
+const SCIENTIST_SALARY_FACTOR = 20;
+const STARTING_CITY_POPULATION = 1000;
 const STARTING_MONEY = 50000;
-
-class FACTIONS {
-  static get NEUTRAL() {
-    return "neutral";
-  }
-
-  static get RED() {
-    return "red";
-  }
-
-  static get GREEN() {
-    return "green";
-  }
-
-  static get BLUE() {
-    return "blue";
-  }
-
-  static get YELLOW() {
-    return "yellow";
-  }
-};
-
-
-class STATES {
-  static get ARMY_DETAILS() {
-    return "army_details";
-  }
-
-  static get BATTLE() {
-    return "battle";
-  }
-
-  static get BATTLE_RESULTS() {
-    return "battle_results";
-  }
-
-  static get CITY_DETAILS() {
-    return "city_details";
-  }
-
-  static get CONSTRUCTION_YARD() {
-    return "construction_yard";
-  }
-
-  static get MAP() {
-    return "map";
-  }
-
-  static get TROOPS_EXCHANGE() {
-    return "troops_exchange";
-  }
-};
 
 class _BuildingPropertiesBundle {
   constructor(default_title, cost, complexity, type) {
@@ -139,6 +88,91 @@ class BUILDING_PROPERTIES {
     );
   }
 };
+
+class FACTIONS {
+  static get NEUTRAL() {
+    return "neutral";
+  }
+
+  static get RED() {
+    return "red";
+  }
+
+  static get GREEN() {
+    return "green";
+  }
+
+  static get BLUE() {
+    return "blue";
+  }
+
+  static get YELLOW() {
+    return "yellow";
+  }
+};
+
+class PERSONNEL_TYPES {
+  static get SCIENTISTS() {
+    return "scientists";
+  }
+
+  static get SOLDIERS() {
+    return "soldiers"
+  }
+};
+
+class RESEARCH_PROJECTS_TITLES {
+  static get ECONOMY() {
+    return "Economy";
+  }
+
+  static get INDUSTRY() {
+    return "Industry";
+  }
+
+  static get SCIENCE() {
+    return "Science";
+  }
+}
+
+class STATES {
+  static get ARMY_DETAILS() {
+    return "army_details";
+  }
+
+  static get BATTLE() {
+    return "battle";
+  }
+
+  static get BATTLE_RESULTS() {
+    return "battle_results";
+  }
+
+  static get CITY_DETAILS() {
+    return "city_details";
+  }
+
+  static get CONSTRUCTION_YARD() {
+    return "construction_yard";
+  }
+
+  static get PERSONNEL_MANAGEMENT() {
+    return "personnel_management";
+  }
+
+  static get MAP() {
+    return "map";
+  }
+
+  static get RESEARCH_INSTITUTE() {
+    return "research_institute";
+  }
+
+  static get TROOPS_EXCHANGE() {
+    return "troops_exchange";
+  }
+};
+
 
 // Representation constants
 const CITY_SIZE = 20;

@@ -47,7 +47,7 @@ class City extends MapObject {
   constructor(city_name, faction, position) {
     super(city_name, faction, position);
 
-    this._buildings = [];
+    this._buildings = {};
     this._city_hall = 0;
     this._construction_yard = new ConstructionYard();
     this._garrison_in = null;
@@ -57,6 +57,14 @@ class City extends MapObject {
 
   get buildings() {
     return this._buildings;
+  }
+
+  get science_level() {
+    if (this._HasResearchInstitute()) {
+      return this._buildings[BUILDING_PROPERTIES.RESEARCH_INSTITUTE.TYPE].science.level;
+    } else {
+      return 0;
+    }
   }
 
   get city_hall() {
@@ -77,6 +85,26 @@ class City extends MapObject {
 
   get population() {
     return this._incubator.population;
+  }
+
+  get research_cost() {
+    if (this._HasResearchInstitute()) {
+      return this._buildings[BUILDING_PROPERTIES.RESEARCH_INSTITUTE.TYPE].cost;
+    } else {
+      return 0;
+    }
+  }
+
+  get research_institute() {
+    if (this._HasResearchInstitute()) {
+      return this._buildings[BUILDING_PROPERTIES.RESEARCH_INSTITUTE.TYPE];
+    } else {
+      return null;
+    }
+  }
+
+  AddPopulation(val) {
+    this._incubator.AddPopulation(val);
   }
 
   CaptureBy(faction) {
@@ -109,9 +137,18 @@ class City extends MapObject {
     return this._incubator.population * city_halls * CITY_HALL_INCOME_FACTOR;
   }
 
+  DoResearch() {
+    if (this._HasResearchInstitute()) {
+      this.research_institute.DoResearch();
+    }
+  }
+
   EstablishReadyBuildings() {
     let ready_buildings = this._construction_yard.WithdrawReadyBuildings();
-    this._buildings.push(...ready_buildings);
+    for (let i=0; i<ready_buildings.length; i++) {
+      let building = ready_buildings[i];
+      this._buildings[building.type] = building;
+    }
   }
 
   GetContactPoint(some_point) {
@@ -122,12 +159,7 @@ class City extends MapObject {
   }
 
   HasBuilding(building_type) {
-    for (let i=0; i<this._buildings.length; i++) {
-      if (this._buildings[i].type === building_type) {
-        return true;
-      }
-    }
-    return false;
+    return this._buildings.hasOwnProperty(building_type);
   }
 
   MakeNewHumans() {
@@ -152,5 +184,13 @@ class City extends MapObject {
 
   UpgradeCityHall() {
     this._city_hall++;
+  }
+
+  WithdrawPopulation(val) {
+    return this._incubator.WithdrawPopulation(val);
+  }
+
+  _HasResearchInstitute() {
+    return this._buildings.hasOwnProperty(BUILDING_PROPERTIES.RESEARCH_INSTITUTE.TYPE);
   }
 };
